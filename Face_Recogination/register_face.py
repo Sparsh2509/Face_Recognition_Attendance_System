@@ -1,9 +1,9 @@
-# import face_recognition
+import face_recognition
 import os
 import pickle
 
 # Folder containing known face images
-# KNOWN_FACES_DIR = r'd:\Sparsh\ML_Projects\Face_Recognition\Face_Recognition\known_faces'
+KNOWN_FACES_DIR = 'd:\Sparsh\ML_Projects\Face\Face_Recogination\known_faces'
 
 # File to save encodings
 ENCODINGS_FILE = 'encodings/encodings.pickle'
