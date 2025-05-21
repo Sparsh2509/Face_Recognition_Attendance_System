@@ -5,7 +5,7 @@ import os
 import dlib
 
 # Load known faces and embeddings
-ENCODINGS_PATH = "d:\Sparsh\ML_Projects\Face\encodings\encodings.pickle"
+ENCODINGS_PATH = "d:\Sparsh\ML_Projects\Face_Recogination\encodings\encodings.pickle"
 
 if not os.path.exists(ENCODINGS_PATH):
     raise FileNotFoundError(f"Encoding file not found at {ENCODINGS_PATH}. Run the registration script first.")
