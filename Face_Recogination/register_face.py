@@ -1,84 +1,70 @@
 import face_recognition
 import mediapipe as mp
-import cv2
 import numpy as np
-import os
-import pickle
+import requests
+from PIL import Image
+from io import BytesIO
+from database import AsyncSessionLocal, UserFace
+import asyncio
 
-# Folder containing person photos (face + background together)
-KNOWN_FACES_DIR = r'd:\Sparsh\ML_Projects\face_recognition\Face_Recogination\known_faces'
-
-# Path to save the encodings
-ENCODINGS_FILE = 'encodings/encodings.pickle'
-os.makedirs('encodings', exist_ok=True)
-
-# MediaPipe setup
+# === Setup MediaPipe Selfie Segmentation ===
 mp_selfie = mp.solutions.selfie_segmentation
 segmentor = mp_selfie.SelfieSegmentation(model_selection=1)
 
-# Load existing data if any
-all_data = []
-if os.path.exists(ENCODINGS_FILE):
-    with open(ENCODINGS_FILE, 'rb') as f:
-        try:
-            all_data = pickle.load(f)
-        except:
-            pass
+# === Main Async Function to Register Face ===
+async def register_user_face(user_id: str, name: str, image_url: str):
+    try:
+        print(f"\n[INFO] Registering user: {name} ({user_id})")
+        print(f"[INFO] Downloading image from: {image_url}")
 
-# Process each image in the folder
+        # === 1. Download Image ===
+        response = requests.get(image_url)
+        response.raise_for_status()
+        img = Image.open(BytesIO(response.content)).convert("RGB")
+        img_np = np.array(img)
 
-print(f"[DEBUG] Scanning folder: {KNOWN_FACES_DIR}")
-files = os.listdir(KNOWN_FACES_DIR)
-print(f"[DEBUG] Files found: {files}")
+        # === 2. MediaPipe Background Segmentation ===
+        result = segmentor.process(img_np)
+        mask = result.segmentation_mask > 0.5
+        background_only = np.where(mask[..., None], 0, img_np)
 
-for filename in files:
-# for filename in os.listdir(KNOWN_FACES_DIR):
-    if not filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-        continue
+        # === 3. Face Detection and Encoding ===
+        face_locations = face_recognition.face_locations(img_np)
+        if not face_locations:
+            print(f"[ERROR] ❌ No face found for user {name}.")
+            return False
 
-    image_path = os.path.join(KNOWN_FACES_DIR, filename)
-    print(f"[INFO] Processing {filename}...")
+        face_encoding = face_recognition.face_encodings(img_np, face_locations)[0]
 
-    # Load image
-    image_bgr = cv2.imread(image_path)
-    image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+        # === 4. Background Encoding (Average RGB) ===
+        bg_pixels = background_only[background_only.sum(axis=2) > 0]
+        if bg_pixels.size == 0:
+            print(f"[WARN] ⚠️ No background pixels found, using [0,0,0].")
+            avg_bg = [0, 0, 0]
+        else:
+            avg_bg = np.mean(bg_pixels, axis=0).tolist()
 
-    # Segment background
-    result = segmentor.process(image_rgb)
-    mask = result.segmentation_mask > 0.5
-    background_only = np.where(mask[..., None], 0, image_bgr)
+        # === 5. Save to Neon DB ===
+        async with AsyncSessionLocal() as post_db:
+            new_user = UserFace(
+                user_id=user_id,
+                name=name,
+                encoding=face_encoding.tolist(),
+                bg_encoding=avg_bg
+            )
+            post_db.add(new_user)
+            await post_db.commit()
 
-    # Get face encodings
-    face_locations = face_recognition.face_locations(image_rgb)
-    if len(face_locations) == 0:
-        print(f"[WARNING] No face found in {filename}")
-        continue
+        print(f"[SUCCESS] ✅ {name} ({user_id}) registered successfully.\n")
+        return True
 
-    face_encoding = face_recognition.face_encodings(image_rgb, face_locations)[0]
+    except Exception as e:
+        print(f"[EXCEPTION] 💥 Error while registering {name}: {e}\n")
+        return False
 
-    # Get average background color
-    bg_pixels = background_only[background_only.sum(axis=2) > 0]
-    if bg_pixels.size == 0:
-        print(f"[WARNING] No background pixels found in {filename}")
-        continue
-
-    avg_bg = np.mean(bg_pixels, axis=0).tolist()
-
-    # Use filename (without extension) as the name
-    name = os.path.splitext(filename)[0]
-
-    # Store data
-    person_data = {
-        "name": name,
-        "encoding": face_encoding.tolist(),
-        "bg_encoding": avg_bg
-    }
-
-    all_data.append(person_data)
-    print(f"[SUCCESS] Registered {name}.")
-
-# Save encodings
-with open(ENCODINGS_FILE, 'wb') as f:
-    pickle.dump(all_data, f)
-
-print(f"[INFO] All encodings saved to {ENCODINGS_FILE}")
+# === Test Hook for Local Debugging ===
+if __name__ == "__main__":
+    test_user_id = "test123"
+    test_name = "SparshTest"
+    test_image_url = "https://res.cloudinary.com/.../your_image.jpg"  # Replace with real Cloudinary URL
+    asyncio.run(register_user_face(test_user_id, test_name, test_image_url))
