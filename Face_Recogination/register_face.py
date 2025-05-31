@@ -5,14 +5,14 @@ import requests
 from PIL import Image
 from io import BytesIO
 from database import AsyncSessionLocal, UserFace
-import asyncio
+# import asyncio
 
 # === Setup MediaPipe Selfie Segmentation ===
 mp_selfie = mp.solutions.selfie_segmentation
 segmentor = mp_selfie.SelfieSegmentation(model_selection=1)
 
 # === Main Async Function to Register Face ===
-async def register_user_face(user_id: str, name: str, image_url: str):
+async def register_face(user_id: str, name: str, image_url: str):
     try:
         print(f"\n[INFO] Registering user: {name} ({user_id})")
         print(f"[INFO] Downloading image from: {image_url}")
@@ -45,15 +45,14 @@ async def register_user_face(user_id: str, name: str, image_url: str):
             avg_bg = np.mean(bg_pixels, axis=0).tolist()
 
         # === 5. Save to Neon DB ===
-        async with AsyncSessionLocal() as post_db:
+        async with AsyncSessionLocal() as session:
             new_user = UserFace(
                 user_id=user_id,
                 name=name,
                 encoding=face_encoding.tolist(),
-                bg_encoding=avg_bg
             )
-            post_db.add(new_user)
-            await post_db.commit()
+            session.add(new_user)
+            await session.commit()
 
         print(f"[SUCCESS] ✅ {name} ({user_id}) registered successfully.\n")
         return True
@@ -63,8 +62,8 @@ async def register_user_face(user_id: str, name: str, image_url: str):
         return False
 
 # === Test Hook for Local Debugging ===
-if __name__ == "__main__":
-    test_user_id = "test123"
-    test_name = "SparshTest"
-    test_image_url = "https://res.cloudinary.com/.../your_image.jpg"  # Replace with real Cloudinary URL
-    asyncio.run(register_user_face(test_user_id, test_name, test_image_url))
+# if __name__ == "__main__":
+#     test_user_id = "test123"
+#     test_name = "SparshTest"
+#     test_image_url = "https://res.cloudinary.com/dzcwomu3h/image/upload/v1748717751/Sparsh_2311143_rmszww.jpg"  # Replace with real Cloudinary URL
+#     asyncio.run(register_face(test_user_id, test_name, test_image_url))
