@@ -39,7 +39,7 @@ class UserFace(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String, unique=True, index=True)
     name = Column(String)
-    image_url = Column(String)
+    encoding = Column(String) 
 
 
 # Dependency to get the database session
