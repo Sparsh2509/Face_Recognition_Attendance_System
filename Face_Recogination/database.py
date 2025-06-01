@@ -2,6 +2,7 @@ from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String
 from dotenv import load_dotenv
 import os
 
@@ -30,11 +31,23 @@ AsyncSessionLocal = sessionmaker(
 # Base class for ORM models
 Base = declarative_base()
 
+
+
+class UserFace(Base):
+    __tablename__ = "user_faces"  # your actual table name
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String, unique=True, index=True)
+    name = Column(String)
+    image_url = Column(String)
+
+
 # Dependency to get the database session
 async def get_db():
     async with AsyncSessionLocal() as session:
         yield session
 
 
+print("[DEBUG] DATABASE_URL:", DATABASE_URL)
 
-print(DATABASE_URL)
+

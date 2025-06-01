@@ -5,46 +5,44 @@ import requests
 from PIL import Image
 from io import BytesIO
 from database import AsyncSessionLocal, UserFace
-# import asyncio
+import asyncio
 
-# === Setup MediaPipe Selfie Segmentation ===
+# Setup MediaPipe segmentation
 mp_selfie = mp.solutions.selfie_segmentation
 segmentor = mp_selfie.SelfieSegmentation(model_selection=1)
 
-# === Main Async Function to Register Face ===
+# Async function to register face
 async def register_face(user_id: str, name: str, image_url: str):
     try:
-        print(f"\n[INFO] Registering user: {name} ({user_id})")
-        print(f"[INFO] Downloading image from: {image_url}")
+        print(f"[INFO] Registering {name} ({user_id}) with image: {image_url}")
 
-        # === 1. Download Image ===
+        # 1. Download image from Cloudinary URL
         response = requests.get(image_url)
-        response.raise_for_status()
         img = Image.open(BytesIO(response.content)).convert("RGB")
         img_np = np.array(img)
 
-        # === 2. MediaPipe Background Segmentation ===
+        # 2. Segment background using MediaPipe
         result = segmentor.process(img_np)
         mask = result.segmentation_mask > 0.5
         background_only = np.where(mask[..., None], 0, img_np)
 
-        # === 3. Face Detection and Encoding ===
+        # 3. Face detection and encoding
         face_locations = face_recognition.face_locations(img_np)
         if not face_locations:
-            print(f"[ERROR] ❌ No face found for user {name}.")
+            print(f"[ERROR] No face found in image for user {name}")
             return False
 
         face_encoding = face_recognition.face_encodings(img_np, face_locations)[0]
 
-        # === 4. Background Encoding (Average RGB) ===
+        # 4. Calculate average background color
         bg_pixels = background_only[background_only.sum(axis=2) > 0]
         if bg_pixels.size == 0:
-            print(f"[WARN] ⚠️ No background pixels found, using [0,0,0].")
+            print(f"[WARNING] No background pixels found in image for user {name}")
             avg_bg = [0, 0, 0]
         else:
             avg_bg = np.mean(bg_pixels, axis=0).tolist()
 
-        # === 5. Save to Neon DB ===
+        # 5. Save to database
         async with AsyncSessionLocal() as session:
             new_user = UserFace(
                 user_id=user_id,
@@ -53,17 +51,16 @@ async def register_face(user_id: str, name: str, image_url: str):
             )
             session.add(new_user)
             await session.commit()
-
-        print(f"[SUCCESS] ✅ {name} ({user_id}) registered successfully.\n")
-        return True
+            print(f"[SUCCESS] Registered {name} ({user_id}) successfully.")
+            return True
 
     except Exception as e:
-        print(f"[EXCEPTION] 💥 Error while registering {name}: {e}\n")
+        print(f"[ERROR] Exception while registering {name}: {e}")
         return False
 
-# === Test Hook for Local Debugging ===
+# # Example for testing standalone
 # if __name__ == "__main__":
 #     test_user_id = "test123"
 #     test_name = "SparshTest"
-#     test_image_url = "https://res.cloudinary.com/dzcwomu3h/image/upload/v1748717751/Sparsh_2311143_rmszww.jpg"  # Replace with real Cloudinary URL
+#     test_image_url = "https://res.cloudinary.com/.../your_image.jpg"  # replace with a real one
 #     asyncio.run(register_face(test_user_id, test_name, test_image_url))
