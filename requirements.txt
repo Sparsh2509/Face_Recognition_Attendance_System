@@ -94,7 +94,6 @@ pyinstaller-hooks-contrib==2024.9
 pyjokes==0.8.3
 PyJWT==2.10.1
 pyparsing==3.2.1
-# pypiwin32==223
 pyproject_hooks==1.1.0
 PySocks==1.7.1
 python-dateutil==2.9.0.post0
@@ -104,7 +103,6 @@ python-jose==3.4.0
 python-multipart==0.0.20
 pyttsx3==2.97
 pytz==2025.2
-# pywin32-ctypes==0.2.3  
 PyYAML==6.0.2
 rapidfuzz==3.9.7
 redis==6.0.0
