@@ -47,7 +47,9 @@ async def register_face(user_id: str, name: str, image_url: str):
             new_user = UserFace(
                 user_id=user_id,
                 name=name,
-                encoding=face_encoding.tolist(),
+                encoding=str(face_encoding.tolist()),
+                avg_bg_color=avg_bg 
+             
             )
             session.add(new_user)
             await session.commit()
