@@ -94,14 +94,12 @@
     
 
 
-
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from register_face import register_face  # Your real logic
 
 app = FastAPI()
 
-# Request body model
 class RegisterRequest(BaseModel):
     user_id: str
     name: str
@@ -124,4 +122,3 @@ async def register_user(data: RegisterRequest):
     except Exception as e:
         print(f"[ERROR] Exception while registering {data.name}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
