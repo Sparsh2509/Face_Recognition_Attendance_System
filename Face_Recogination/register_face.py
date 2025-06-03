@@ -1,4 +1,5 @@
-import face_recognition
+
+from deepface import DeepFace
 import mediapipe as mp
 import numpy as np
 import requests
@@ -27,12 +28,12 @@ async def register_face(user_id: str, name: str, image_url: str):
         background_only = np.where(mask[..., None], 0, img_np)
 
         # 3. Face detection and encoding
-        face_locations = face_recognition.face_locations(img_np)
-        if not face_locations:
-            print(f"[ERROR] No face found in image for user {name}")
+        try:
+            embedding_obj = DeepFace.represent(img_path=img_np, model_name="Facenet", enforce_detection=True)[0]
+            face_encoding = embedding_obj["embedding"]
+        except Exception as e:
+            print(f"[ERROR] No face found or encoding failed for user {name}: {e}")
             return False
-
-        face_encoding = face_recognition.face_encodings(img_np, face_locations)[0]
 
         # 4. Calculate average background color
         bg_pixels = background_only[background_only.sum(axis=2) > 0]
