@@ -100,8 +100,8 @@ from register_face import register_face  # Your real logic
 
 app = FastAPI()
 
-@app.get("/message")
-def root():
+@app.get("/message/")
+async def root():
     return {"message": "Face Recognition API is running."}
 
 class RegisterRequest(BaseModel):
