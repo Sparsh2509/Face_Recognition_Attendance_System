@@ -8,6 +8,14 @@ import mediapipe as mp
 from database import AsyncSessionLocal, UserFace
 from sqlalchemy.future import select
 from sqlalchemy.exc import SQLAlchemyError
+import json
+
+# Preload Facenet model once to avoid download delay on first request
+def preload_facenet_model():
+    print("[INFO] Preloading Facenet model...")
+    dummy = np.zeros((160, 160, 3), dtype=np.uint8)
+    DeepFace.represent(img_path=dummy, model_name="Facenet", enforce_detection=False)
+    print("[INFO] Facenet model preloaded.")
 
 
 async def register_face(user_id: str, name: str, image_url: str) -> bool:
@@ -50,7 +58,6 @@ async def register_face(user_id: str, name: str, image_url: str) -> bool:
                 avg_bg_color = bg_img[bg_img != 0].mean()
 
         # Convert face embedding list to JSON string (for DB storage)
-        import json
         encoding_str = json.dumps(face_embedding)
 
         # Save to DB using your AsyncSessionLocal and UserFace model

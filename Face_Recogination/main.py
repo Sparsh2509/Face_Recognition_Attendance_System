@@ -94,35 +94,78 @@
     
 
 
+# from fastapi import FastAPI, HTTPException
+# from pydantic import BaseModel
+# from register_face import register_face  # Your real logic
+
+# app = FastAPI()
+
+# @app.get("/message/")
+# async def root():
+#     return {"message": "Face Recognition API is running."}
+
+# class RegisterRequest(BaseModel):
+#     user_id: str
+#     name: str
+#     image_url: str
+
+# @app.post("/register/")
+# async def register_user(data: RegisterRequest):
+#     try:
+#         success = await register_face(
+#             user_id=data.user_id,
+#             name=data.name,
+#             image_url=data.image_url
+#         )
+
+#         if success:
+#             return {"status": "success", "message": f"{data.name} registered."}
+#         else:
+#             raise HTTPException(status_code=400, detail="Face not detected or failed to register.")
+
+#     except Exception as e:
+#         print(f"[ERROR] Exception while registering {data.name}: {str(e)}")
+#         raise HTTPException(status_code=500, detail=str(e))
+    
+
+
+
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from register_face import register_face  # Your real logic
+from register_face import register_face, preload_facenet_model
 
 app = FastAPI()
+
+# Call this once at app startup to preload Facenet weights
+@app.on_event("startup")
+async def startup_event():
+    preload_facenet_model()
+
+
 
 @app.get("/message/")
 async def root():
     return {"message": "Face Recognition API is running."}
 
+
+# Request body schema
 class RegisterRequest(BaseModel):
     user_id: str
     name: str
     image_url: str
 
+
 @app.post("/register/")
-async def register_user(data: RegisterRequest):
+async def register_user(req: RegisterRequest):
     try:
-        success = await register_face(
-            user_id=data.user_id,
-            name=data.name,
-            image_url=data.image_url
-        )
-
+        success = await register_face(req.user_id, req.name, req.image_url)
         if success:
-            return {"status": "success", "message": f"{data.name} registered."}
+            return {"status": "success", "message": f"{req.name} registered."}
         else:
-            raise HTTPException(status_code=400, detail="Face not detected or failed to register.")
-
+            raise HTTPException(status_code=500, detail="Failed to register user.")
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
-        print(f"[ERROR] Exception while registering {data.name}: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+
