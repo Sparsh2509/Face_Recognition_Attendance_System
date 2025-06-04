@@ -164,13 +164,15 @@ class RegisterRequest(BaseModel):
 @app.post("/register/")
 async def register_user(req: RegisterRequest):
     try:
+        print(f"Received register request: {req.dict()}")
         success = await register_face(req.user_id, req.name, req.image_url)
         if success:
             return {"status": "success", "message": f"{req.name} registered."}
         else:
             raise HTTPException(status_code=500, detail="Failed to register user.")
     except ValueError as ve:
+        print("ValueError:", ve)
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
+        print("Unexpected Exception:", e)
         raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
-

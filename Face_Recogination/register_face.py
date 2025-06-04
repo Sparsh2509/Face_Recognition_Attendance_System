@@ -214,10 +214,15 @@ async def register_face(user_id: str, name: str, image_url: str) -> bool:
 
     if not image_url.endswith(".jpg"):
         raise ValueError("Only JPEG images are accepted.")
+    
 
+    print("[INFO] Fetching image from URL...")
+    
     response = requests.get(image_url)
     if response.status_code != 200 or "image" not in response.headers.get("Content-Type", ""):
         raise ValueError("Invalid image URL or format.")
+    
+    print("[INFO] Performing DeepFace encoding...")
 
     try:
         img = Image.open(BytesIO(response.content)).convert("RGB")
