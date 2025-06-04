@@ -127,20 +127,25 @@
 #         print(f"[ERROR] Exception while registering {data.name}: {str(e)}")
 #         raise HTTPException(status_code=500, detail=str(e))
     
-
-
-
-
+import numpy as np
+from deepface import DeepFace
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from register_face import register_face, preload_facenet_model
+from register_face import register_face
 
 app = FastAPI()
+
+def preload_sface_model():
+    print("[INFO] Preloading SFace model...")
+    dummy = np.zeros((160, 160, 3), dtype=np.uint8)
+    DeepFace.represent(img_path=dummy, model_name="SFace", enforce_detection=False)
+    print("[INFO] SFace model preloaded.")
+
 
 # Call this once at app startup to preload Facenet weights
 @app.on_event("startup")
 async def startup_event():
-    preload_facenet_model()
+    preload_sface_model()
 
 
 
