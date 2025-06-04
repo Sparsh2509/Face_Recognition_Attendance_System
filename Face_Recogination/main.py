@@ -163,6 +163,9 @@ class RegisterRequest(BaseModel):
 
 @app.post("/register/")
 async def register_user(req: RegisterRequest):
+
+    print("[DEBUG] /register/ POST route hit") 
+     
     try:
         print(f"Received register request: {req.dict()}")
         success = await register_face(req.user_id, req.name, req.image_url)
