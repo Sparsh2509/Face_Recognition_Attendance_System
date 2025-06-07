@@ -127,55 +127,157 @@
 #         print(f"[ERROR] Exception while registering {data.name}: {str(e)}")
 #         raise HTTPException(status_code=500, detail=str(e))
     
+# import numpy as np
+# from deepface import DeepFace
+# from fastapi import FastAPI, HTTPException
+# from pydantic import BaseModel
+# import uvicorn
+# # from register_face import register_face
+# import os
+
+# try:
+#     from register_face import register_face
+# except Exception as e:
+#     print("[IMPORT ERROR] in register_face.py:", e)
+#     import sys
+#     sys.exit(1)
+
+
+# app = FastAPI()
+
+# # def preload_sface_model():
+# #     print("[INFO] Preloading SFace model...")
+# #     dummy = np.zeros((160, 160, 3), dtype=np.uint8)
+# #     DeepFace.represent(img_path=dummy, model_name="SFace", enforce_detection=False)
+# #     print("[INFO] SFace model preloaded.")
+
+
+# # Call this once at app startup to preload Facenet weights
+# @app.on_event("startup")
+# async def startup_event():
+#     preload_sface_model()
+
+
+
+# @app.get("/message/")
+# async def root():
+#     return {"message": "Face Recognition API is running."}
+
+
+# # Request body schema
+# class RegisterRequest(BaseModel):
+#     user_id: str
+#     name: str
+#     image_url: str
+
+
+# # @app.post("/register/")
+# # async def register_user(req: RegisterRequest):
+
+# #     print("[DEBUG] /register/ POST route hit") 
+     
+# #     try:
+# #         print(f"Received register request: {req.dict()}")
+# #         success = await register_face(req.user_id, req.name, req.image_url)
+# #         if success:
+# #             return {"status": "success", "message": f"{req.name} registered."}
+# #         else:
+# #             raise HTTPException(status_code=500, detail="Failed to register user.")
+# #     except ValueError as ve:
+# #         print("ValueError:", ve)
+# #         raise HTTPException(status_code=400, detail=str(ve))
+# #     except Exception as e:
+# #         print("Unexpected Exception:", e)
+# #         raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+
+
+# model_loaded = False  # global variable
+
+# @app.post("/register/")
+# async def register_user(req: RegisterRequest):
+#     global model_loaded
+
+#     print("[DEBUG] /register/ POST route hit")
+
+#     try:
+#         if not model_loaded:
+#             print("[INFO] Lazy loading SFace model...")
+#             dummy = np.zeros((160, 160, 3), dtype=np.uint8)
+#             DeepFace.represent(img_path=dummy, model_name="SFace", enforce_detection=False)
+#             model_loaded = True
+#             print("[INFO] SFace model loaded.")
+
+#         # Proceed with registration
+#         print(f"Received register request: {req.dict()}")
+#         success = await register_face(req.user_id, req.name, req.image_url)
+#         if success:
+#             return {"status": "success", "message": f"{req.name} registered."}
+#         else:
+#             raise HTTPException(status_code=500, detail="Failed to register user.")
+    
+#     except ValueError as ve:
+#         print("ValueError:", ve)
+#         raise HTTPException(status_code=400, detail=str(ve))
+#     except Exception as e:
+#         print("Unexpected Exception:", e)
+#         raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+
+
+
+# if __name__ == "__main__":
+#     port = int(os.environ.get("PORT", 8000))
+#     print(f"Running on port {port}")
+#     import uvicorn
+#     uvicorn.run(app, host="0.0.0.0", port=port)
+
 import numpy as np
 from deepface import DeepFace
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn
-from register_face import register_face
 import os
 
+# Import your register_face function
+try:
+    from register_face import register_face
+except Exception as e:
+    print("[IMPORT ERROR] in register_face.py:", e)
+    import sys
+    sys.exit(1)
 
 app = FastAPI()
 
-def preload_sface_model():
-    print("[INFO] Preloading SFace model...")
-    dummy = np.zeros((160, 160, 3), dtype=np.uint8)
-    DeepFace.represent(img_path=dummy, model_name="SFace", enforce_detection=False)
-    print("[INFO] SFace model preloaded.")
+model_loaded = False  # global flag
 
-
-# Call this once at app startup to preload Facenet weights
-@app.on_event("startup")
-async def startup_event():
-    preload_sface_model()
-
-
-
-@app.get("/message/")
+@app.get("/")
 async def root():
     return {"message": "Face Recognition API is running."}
 
-
-# Request body schema
 class RegisterRequest(BaseModel):
     user_id: str
     name: str
     image_url: str
 
-
 @app.post("/register/")
 async def register_user(req: RegisterRequest):
+    global model_loaded
+    print("[DEBUG] /register/ POST route hit")
 
-    print("[DEBUG] /register/ POST route hit") 
-     
     try:
+        if not model_loaded:
+            print("[INFO] Lazy loading SFace model...")
+            dummy = np.zeros((160, 160, 3), dtype=np.uint8)
+            DeepFace.represent(img_path=dummy, model_name="SFace", enforce_detection=False)
+            model_loaded = True
+            print("[INFO] SFace model loaded.")
+
         print(f"Received register request: {req.dict()}")
         success = await register_face(req.user_id, req.name, req.image_url)
         if success:
             return {"status": "success", "message": f"{req.name} registered."}
         else:
             raise HTTPException(status_code=500, detail="Failed to register user.")
+
     except ValueError as ve:
         print("ValueError:", ve)
         raise HTTPException(status_code=400, detail=str(ve))
@@ -183,8 +285,8 @@ async def register_user(req: RegisterRequest):
         print("Unexpected Exception:", e)
         raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
 
-
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    import uvicorn
+    print(f"Running on port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)
+
