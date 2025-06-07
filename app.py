@@ -131,7 +131,10 @@ import numpy as np
 from deepface import DeepFace
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+import uvicorn
 from register_face import register_face
+import os
+
 
 app = FastAPI()
 
@@ -179,3 +182,9 @@ async def register_user(req: RegisterRequest):
     except Exception as e:
         print("Unexpected Exception:", e)
         raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=port)
