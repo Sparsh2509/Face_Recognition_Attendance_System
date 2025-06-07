@@ -53,7 +53,6 @@ async def get_db():
 print("[DEBUG] DATABASE_URL:", DATABASE_URL)
 
 
-# fveufuheriuferbfkjerhifherfiherifkernvidrfvbfiilcs/
 
 
 ##### Database showing commands in cmd
