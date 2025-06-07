@@ -407,7 +407,7 @@ sface_model = None
 def load_sface_model():
     global sface_model
     if sface_model is None:
-        model_path = "d:\Sparsh\ML_Projects\Face_Recogination\models"
+        model_path = "D:\Sparsh\ML_Projects\Face_Recogination\models\face_recognition_sface_2021dec.onnx"
         if not os.path.exists(model_path):
             raise FileNotFoundError("SFace ONNX model not found in 'models/' directory.")
         sface_model = cv2.dnn.readNetFromONNX(model_path)
