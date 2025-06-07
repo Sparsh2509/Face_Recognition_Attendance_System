@@ -415,60 +415,32 @@
 
 
 
-import os
-import cv2
-import numpy as np
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from register_face import register_face
 
 app = FastAPI()
 
-# Global model cache
-sface_model = None
-
 class RegisterRequest(BaseModel):
     user_id: str
     name: str
     image_url: str
 
-def load_sface_model():
-    model_path = "models/face_recognition_sface_2021dec.onnx"
-    if not os.path.exists(model_path):
-        raise RuntimeError("SFace model ONNX not found in models/ directory.")
-    
-    model = cv2.dnn.readNetFromONNX(model_path)
-    return model
-
-def get_sface_embedding(image: np.ndarray, model) -> np.ndarray:
-    # Resize and preprocess
-    blob = cv2.dnn.blobFromImage(image, 1.0 / 255, (112, 112), (0, 0, 0), swapRB=True, crop=False)
-    model.setInput(blob)
-    embedding = model.forward()
-    return embedding.flatten()
+@app.get("/")
+async def root():
+    return {"message": "Face Registration API is running."}
 
 @app.post("/register/")
 async def register_user(req: RegisterRequest):
-    global sface_model
-
     try:
-        if sface_model is None:
-            print("[INFO] Lazy loading SFace ONNX model...")
-            sface_model = load_sface_model()
+        success = await register_face(req.user_id, req.name, req.image_url)
 
-        # Download image from Cloudinary (assuming it's a public URL)
-        resp = cv2.VideoCapture(req.image_url)
-        success, image = resp.read()
-        if not success:
-            raise HTTPException(status_code=400, detail="Could not download or read the image.")
+        if success:
+            return {"status": "success", "message": f"{req.name} registered successfully."}
+        else:
+            raise HTTPException(status_code=500, detail="User registration failed.")
 
-        embedding = get_sface_embedding(image, sface_model)
-
-        # Pass to register logic
-        result = await register_face(req.user_id, req.name, embedding.tolist(), req.image_url)
-
-        return {"status": "success", "message": f"{req.name} registered."}
-    
     except Exception as e:
-        print("Unexpected Exception:", e)
+        print("Unexpected error:", e)
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+
