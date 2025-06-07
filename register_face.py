@@ -389,3 +389,4 @@ async def register_face(user_id: str, name: str, image_url: str) -> bool:
     except Exception as e:
         print(f"[ERROR] No face found or encoding failed for user {name}: {e}")
         return False
+
