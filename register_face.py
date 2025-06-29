@@ -56,27 +56,36 @@ async def register_face(user_id: str, name: str, image_url: str) -> bool:
         model = load_sface_model()
         face_embedding = get_sface_embedding(img_np, model)
 
-        print("[INFO] Performing background encoding using fixed area...")
-        ih, iw, _ = img_np.shape
+        # Average background color
+        print("[INFO] Performing background encoding...")
+        
 
-        # Define fixed background region (top-left corner: 100x100 pixels)
-        x1, y1, x2, y2 = 20, 20, 120, 120
+        mp_face_detection = mp.solutions.face_detection
+        with mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.5) as detector:
+            results = detector.process(cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR))
 
-        # Ensure it doesn’t exceed image boundaries
-        x1 = max(0, x1)
-        y1 = max(0, y1)
-        x2 = min(iw, x2)
-        y2 = min(ih, y2)
+            if not results.detections:
+                raise ValueError("Face not detected for background sampling.")
 
-        bg_crop = img_np[y1:y2, x1:x2]
-        avg_bg_color = np.mean(bg_crop.reshape(-1, 3), axis=0)
-        avg_bg_color = [round(float(c), 3) for c in avg_bg_color]
+            detection = results.detections[0]
+            bboxC = detection.location_data.relative_bounding_box
+            ih, iw, _ = img_np.shape
 
-        # Prepare data for DB
-        encoding_str = json.dumps(face_embedding.tolist())
+            x = int(bboxC.xmin * iw)
+            y = int(bboxC.ymin * ih)
+            w = int(bboxC.width * iw)
+            h = int(bboxC.height * ih)
 
-        # # Average background color
-        # print("[INFO] Performing background encoding...")
+            # Sample background 50px above face, 100px to left side (adjustable)
+            bg_x1 = max(x - 100, 0)
+            bg_y1 = max(y - 50, 0)
+            bg_x2 = min(bg_x1 + 100, iw)
+            bg_y2 = min(bg_y1 + 100, ih)
+
+            bg_crop = img_np[bg_y1:bg_y2, bg_x1:bg_x2]
+            avg_bg_color = np.mean(bg_crop.reshape(-1, 3), axis=0)
+            avg_bg_color = [round(float(c), 3) for c in avg_bg_color]
+
         # mp_face_detection = mp.solutions.face_detection
         # with mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.5) as detector:
         #     results = detector.process(cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR))
