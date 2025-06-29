@@ -115,8 +115,8 @@ async def register_face(user_id: str, name: str, image_url: str) -> bool:
         #     avg_bg_color = np.mean(bg_pixels, axis=0)
         #     avg_bg_color = [round(float(c), 3) for c in avg_bg_color]
 
-        # # Prepare data for DB
-        # encoding_str = json.dumps(face_embedding.tolist())
+        # Prepare data for DB
+        encoding_str = json.dumps(face_embedding.tolist())
 
         # Store in DB
         async with AsyncSessionLocal() as session:
