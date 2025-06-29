@@ -1,4 +1,4 @@
-from sqlalchemy import URL
+from sqlalchemy import Date,Time 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -42,6 +42,18 @@ class UserFace(Base):
     name = Column(String)
     encoding = Column(String) 
     avg_bg_color = Column(JSON)
+
+
+class AttendanceLog(Base):
+    __tablename__ = "attendance_status"
+
+    user_id = Column(String, primary_key=True)
+    name = Column(String)
+    date = Column(Date, primary_key=True)
+    in_time = Column(Time, nullable=True)
+    in_status = Column(String, default="absent")
+    out_time = Column(Time, nullable=True)
+    out_status = Column(String, default="absent")
 
 
 # Dependency to get the database session
