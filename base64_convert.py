@@ -34,7 +34,7 @@
 import requests
 import base64
 
-url = "https://res.cloudinary.com/dzcwomu3h/image/upload/v1751193684/Achal_tkargi.jpg"
+url = "https://res.cloudinary.com/dzcwomu3h/image/upload/v1748963648/New_Image_ieiuem.jpg"
 resp = requests.get(url)
 resp.raise_for_status()
 
