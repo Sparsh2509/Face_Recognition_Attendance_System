@@ -2,6 +2,7 @@ import json
 import numpy as np
 from datetime import datetime
 from sqlalchemy.future import select
+import pytz
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import and_
 
@@ -139,7 +140,8 @@ async def recognize_face(image_base64: str, intended_mode: str) -> dict:
 
                 # ✅ Loosened threshold slightly
                 if (best_sim >= 0.72 and best_bg_dist <= 110) or best_sim >= 0.95:
-                    timestamp = datetime.now()
+                    ist = pytz.timezone("Asia/Kolkata")
+                    timestamp = datetime.now(ist)
                     mode = await mark_attendance(best_user.user_id, best_user.name, timestamp, intended_mode)
             # if best_user and best_sim >= 0.75 and best_bg_dist <= 80:
             #     timestamp = datetime.now()
