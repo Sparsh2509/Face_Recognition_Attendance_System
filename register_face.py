@@ -18,7 +18,7 @@ async def register_face(user_id: str, name: str, image_url: str) -> bool:
     print(f"[INFO] Registering {name} ({user_id}) with image: {image_url}")
 
     # Validate image URL
-    if not image_url.endswith((".jpg", ".jpeg", ".png")):
+    if not str(image_url.endswith((".jpg", ".jpeg", ".png"))):
         raise HTTPException(status_code=400, detail="Only JPEG or PNG images are accepted.")
 
     print("[INFO] Fetching image from URL...")
