@@ -37,7 +37,7 @@ async def root():
 @app.post("/register/")
 async def register_user(req: RegisterRequest):
     try:
-        success = await register_face(req.user_id, req.name, req.image_url)
+        success = await register_face(req.user_id, req.name, str(req.image_url))
 
         if success:
             return {
