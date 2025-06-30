@@ -59,30 +59,37 @@ async def register_user(req: RegisterRequest):
 @app.post("/recognize/")
 async def recognize_user(req: RecognizeRequest):
     try:
-        result = await recognize_face(req.image_base64, req.mode.value)  # use .value from Enum
+        result = await recognize_face(req.image_base64, req.mode.value)
 
         if result["status"] == "present":
             return {
                 "status": "success",
                 "message": "Attendance marked",
+                "can_retry": False,
                 "data": result
             }
+
         elif result["status"] == "absent":
             return {
                 "status": "absent",
                 "message": result.get("reason", "Face not recognized"),
+                "can_retry": True,
                 "data": None
             }
+
         elif result["status"] == "invalid":
             return {
                 "status": "invalid",
                 "message": result.get("message", "Invalid flow"),
+                "can_retry": True,
                 "data": None
             }
+
         else:
             return {
                 "status": "error",
                 "message": result.get("reason", "Unknown error"),
+                "can_retry": True,
                 "data": None
             }
 
@@ -91,9 +98,9 @@ async def recognize_user(req: RecognizeRequest):
         return {
             "status": "error",
             "message": f"Unexpected error: {str(e)}",
+            "can_retry": True,
             "data": None
         }
-
 # Get attendance logs
 @app.get("/attendance-log/")
 # async def get_attendance_log(
