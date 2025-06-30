@@ -138,7 +138,7 @@ async def recognize_face(image_base64: str, intended_mode: str) -> dict:
                 print(f"[DEBUG] Best sim: {best_sim:.4f}, Best bg_dist: {best_bg_dist:.2f}")
 
                 # ✅ Loosened threshold slightly
-                if best_sim >= 0.72 and best_bg_dist <= 100:
+                if (best_sim >= 0.72 and best_bg_dist <= 110) or best_sim >= 0.95:
                     timestamp = datetime.now()
                     mode = await mark_attendance(best_user.user_id, best_user.name, timestamp, intended_mode)
             # if best_user and best_sim >= 0.75 and best_bg_dist <= 80:
