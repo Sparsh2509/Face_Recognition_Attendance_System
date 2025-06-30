@@ -1,0 +1,29 @@
+name: Daily Attendance Finalizer
+
+on:
+  schedule:
+    - cron: '31 18 * * *'  # Runs at 12:01 AM IST (UTC+5:30)
+  workflow_dispatch:        # Optional: run manually from GitHub Actions UI
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📁 Checkout Repo
+      uses: actions/checkout@v3
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: 📦 Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: 🧠 Run Finalizer Script
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        python run_finalize.py
