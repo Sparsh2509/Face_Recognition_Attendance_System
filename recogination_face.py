@@ -1,8 +1,9 @@
 import json
 import numpy as np
 from datetime import datetime
-from sqlalchemy.future import select
 import pytz
+import mediapipe as mp
+from sqlalchemy.future import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import and_
 
@@ -14,9 +15,6 @@ from shared_code import (
     cosine_similarity,
     color_distance
 )
-
-import cv2
-import mediapipe as mp
 
 
 async def mark_attendance(user_id: str, name: str, timestamp: datetime, intended_mode: str) -> str:
@@ -75,13 +73,23 @@ async def mark_attendance(user_id: str, name: str, timestamp: datetime, intended
 
 async def recognize_face(image_base64: str, intended_mode: str) -> dict:
     try:
-        # Step 1: Decode image
-        img_np = decode_base64_image(image_base64)
+        # Input validation
+        if not image_base64 or not isinstance(image_base64, str):
+            return {"status": "error", "reason": "No base64 image provided."}
 
-        # Step 2: Load model
+        if intended_mode not in {"in", "out"}:
+            return {"status": "error", "reason": "Invalid mode. Must be 'in' or 'out'."}
+
+        # Decode image safely
+        try:
+            img_np = decode_base64_image(image_base64)
+        except Exception as e:
+            return {"status": "error", "reason": f"Image decode failed: {str(e)}"}
+
+        # Load SFace model
         model = load_sface_model()
 
-        # Step 3: Face detection
+        # Face detection using MediaPipe
         mp_face_detection = mp.solutions.face_detection
         with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.3) as detector:
             results = detector.process(img_np)
@@ -95,10 +103,8 @@ async def recognize_face(image_base64: str, intended_mode: str) -> dict:
 
             x = int(bboxC.xmin * iw)
             y = int(bboxC.ymin * ih)
-            w = int(bboxC.width * iw)
-            h = int(bboxC.height * ih)
 
-            # Sample background region
+            # Sample background
             bg_x1 = max(x - 100, 0)
             bg_y1 = max(y - 50, 0)
             bg_x2 = min(bg_x1 + 100, iw)
@@ -108,10 +114,10 @@ async def recognize_face(image_base64: str, intended_mode: str) -> dict:
             avg_bg_color = np.mean(bg_crop.reshape(-1, 3), axis=0)
             avg_bg_color = [round(float(c), 3) for c in avg_bg_color]
 
-        # Step 4: Get current face embedding
+        # Get face embedding
         face_embedding = get_face_embedding(img_np, model)
 
-        # Step 5: Match with users (Top-1 strategy)
+        # Match with database (Top-1 strategy)
         async with AsyncSessionLocal() as session:
             query = select(UserFace)
             result = await session.execute(query)
@@ -133,19 +139,15 @@ async def recognize_face(image_base64: str, intended_mode: str) -> dict:
                     best_user = user
                     best_bg_dist = bg_dist
 
-            # Step 6: Final decision
+            # Final decision
             if best_user:
                 print(f"[DEBUG] Best match: {best_user.name}")
                 print(f"[DEBUG] Best sim: {best_sim:.4f}, Best bg_dist: {best_bg_dist:.2f}")
 
-                # ✅ Loosened threshold slightly
                 if (best_sim >= 0.72 and best_bg_dist <= 110) or best_sim >= 0.95:
                     ist = pytz.timezone("Asia/Kolkata")
                     timestamp = datetime.now(ist)
                     mode = await mark_attendance(best_user.user_id, best_user.name, timestamp, intended_mode)
-            # if best_user and best_sim >= 0.75 and best_bg_dist <= 80:
-            #     timestamp = datetime.now()
-            #     mode = await mark_attendance(best_user.user_id, best_user.name, timestamp, intended_mode)
 
                     if mode == "invalid_out":
                         return {"status": "invalid", "message": "Please mark IN before marking OUT."}
@@ -158,7 +160,6 @@ async def recognize_face(image_base64: str, intended_mode: str) -> dict:
                         "user_id": best_user.user_id,
                         "name": best_user.name
                     }
-                
                 else:
                     return {
                         "status": "absent",
@@ -170,4 +171,3 @@ async def recognize_face(image_base64: str, intended_mode: str) -> dict:
     except Exception as e:
         print(f"[ERROR] {e}")
         return {"status": "error", "reason": str(e)}
-
