@@ -133,9 +133,17 @@ async def recognize_face(image_base64: str, intended_mode: str) -> dict:
                     best_bg_dist = bg_dist
 
             # Step 6: Final decision
-            if best_user and best_sim >= 0.75 and best_bg_dist <= 80:
-                timestamp = datetime.now()
-                mode = await mark_attendance(best_user.user_id, best_user.name, timestamp, intended_mode)
+            if best_user:
+                print(f"[DEBUG] Best match: {best_user.name}")
+                print(f"[DEBUG] Best sim: {best_sim:.4f}, Best bg_dist: {best_bg_dist:.2f}")
+
+                # ✅ Loosened threshold slightly
+                if best_sim >= 0.72 and best_bg_dist <= 100:
+                    timestamp = datetime.now()
+                    mode = await mark_attendance(best_user.user_id, best_user.name, timestamp, intended_mode)
+            # if best_user and best_sim >= 0.75 and best_bg_dist <= 80:
+            #     timestamp = datetime.now()
+            #     mode = await mark_attendance(best_user.user_id, best_user.name, timestamp, intended_mode)
 
                 if mode == "invalid_out":
                     return {"status": "invalid", "message": "Please mark IN before marking OUT."}
