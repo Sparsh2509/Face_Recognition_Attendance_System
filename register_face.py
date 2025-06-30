@@ -22,7 +22,7 @@ async def register_face(user_id: str, name: str, image_url: str) -> bool:
         raise HTTPException(status_code=400, detail="Only JPEG or PNG images are accepted.")
 
     print("[INFO] Fetching image from URL...")
-    response = requests.get(image_url)
+    response = requests.get(str(image_url))
     if response.status_code != 200 or "image" not in response.headers.get("Content-Type", ""):
         raise HTTPException(status_code=400, detail="Invalid image URL or format.")
 
