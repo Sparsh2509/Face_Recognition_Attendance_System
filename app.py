@@ -1,35 +1,8 @@
-# from fastapi import FastAPI, HTTPException
-# from pydantic import BaseModel
-# from register_face import register_face
-
-# app = FastAPI()
-
-# class RegisterRequest(BaseModel):
-#     user_id: str
-#     name: str
-#     image_url: str
-
-# @app.get("/")
-# async def root():
-#     return {"message": "Face Registration API is running."}
-
-# @app.post("/register/")
-# async def register_user(req: RegisterRequest):
-#     try:
-#         success = await register_face(req.user_id, req.name, req.image_url)
-
-#         if success:
-#             return {"status": "success", "message": f"{req.name} registered successfully."}
-#         else:
-#             raise HTTPException(status_code=500, detail="User registration failed.")
-
-#     except Exception as e:
-#         print("Unexpected error:", e)
-#         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
-
-from fastapi import FastAPI, HTTPException, Query
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, HttpUrl , constr
 from typing import Optional
+from typing import Annotated
 from register_face import register_face
 from recogination_face import recognize_face
 from database import AsyncSessionLocal, AttendanceLog
@@ -37,18 +10,16 @@ from sqlalchemy.future import select
 
 app = FastAPI()
 
-# ---------- MODELS ----------
 
 class RegisterRequest(BaseModel):
-    user_id: str
-    name: str
-    image_url: str
+    user_id: Annotated[str, constr(strip_whitespace=True, min_length=1)]
+    name: Annotated[str, constr(strip_whitespace=True, min_length=1, max_length=50)]
+    image_url: HttpUrl
 
 class RecognizeRequest(BaseModel):
     image_base64: str
     mode: str  # "in" or "out"
 
-# ---------- ROUTES ----------
 
 @app.get("/")
 async def root():
@@ -72,7 +43,8 @@ async def register_user(req: RegisterRequest):
 
     except Exception as e:
         print("Unexpected error during registration:", e)
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        return JSONResponse(status_code=500, content={"status": "error", "message": f"Unexpected error: {str(e)}"})
+    
 
 # ✅ Real-time Recognition (base64 + mode)
 @app.post("/recognize/")
