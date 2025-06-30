@@ -268,7 +268,7 @@ async def recognize_face(image_base64: str, intended_mode: str) -> dict:
 
                 print(f"[DEBUG] Matching with {user.name} (ID: {user.user_id}) → sim={sim:.4f}, bg_dist={bg_dist:.2f}")
 
-                if sim >= 0.6 and bg_dist <= 30:
+                if sim >= 0.6 and bg_dist <= 80:
                     timestamp = datetime.now()
                     mode = await mark_attendance(user.user_id, user.name, timestamp, intended_mode)
 
