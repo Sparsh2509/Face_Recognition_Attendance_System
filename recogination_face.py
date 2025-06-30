@@ -145,17 +145,23 @@ async def recognize_face(image_base64: str, intended_mode: str) -> dict:
             #     timestamp = datetime.now()
             #     mode = await mark_attendance(best_user.user_id, best_user.name, timestamp, intended_mode)
 
-                if mode == "invalid_out":
-                    return {"status": "invalid", "message": "Please mark IN before marking OUT."}
+                    if mode == "invalid_out":
+                        return {"status": "invalid", "message": "Please mark IN before marking OUT."}
 
-                return {
-                    "status": "present",
-                    "mode": mode,
-                    "time": timestamp.strftime("%H:%M"),
-                    "date": timestamp.strftime("%Y-%m-%d"),
-                    "user_id": best_user.user_id,
-                    "name": best_user.name
-                }
+                    return {
+                        "status": "present",
+                        "mode": mode,
+                        "time": timestamp.strftime("%H:%M"),
+                        "date": timestamp.strftime("%Y-%m-%d"),
+                        "user_id": best_user.user_id,
+                        "name": best_user.name
+                    }
+                
+                else:
+                    return {
+                        "status": "absent",
+                        "reason": f"Best match failed: sim={best_sim:.3f}, bg_dist={best_bg_dist:.2f}"
+                    }
 
         return {"status": "absent", "reason": "No matching face or background"}
 
