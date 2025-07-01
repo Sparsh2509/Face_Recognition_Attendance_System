@@ -103,67 +103,11 @@ async def recognize_user(req: RecognizeRequest):
         }
 # Get attendance logs
 @app.get("/attendance-log/")
-# async def get_attendance_log(
-    
-#     user_id: Annotated[str, Query(min_length=1, description="User ID")],
-#     date: Optional[Annotated[str, Query(pattern=r"^\d{4}-\d{2}-\d{2}$")]] = None
-# ):
-#     """
-#     Returns attendance log for a given user_id.
-#     If date is provided, it must be in YYYY-MM-DD format.
-#     """
-#     try:
-#         async with AsyncSessionLocal() as session:
-#             if date:
-#                 query = select(AttendanceLog).where(
-#                     AttendanceLog.user_id == user_id,
-#                     AttendanceLog.date == date
-#                 )
-#             else:
-#                 query = select(AttendanceLog).where(
-#                     AttendanceLog.user_id == user_id
-#                 ).order_by(AttendanceLog.date.desc())
-
-#             result = await session.execute(query)
-#             logs = result.scalars().all()
-
-#             if not logs:
-#                 return {
-#                     "status": "not_found",
-#                     "message": "No attendance records found.",
-#                     "data": []
-#                 }
-
-#             return {
-#                 "status": "success",
-#                 "data": [
-#                     {
-#                         "user_id": log.user_id,
-#                         "name": log.name,
-#                         "date": log.date.isoformat(),
-#                         "in_time": str(log.in_time) if log.in_time else None,
-#                         "out_time": str(log.out_time) if log.out_time else None,
-#                         "in_status": log.in_status,
-#                         "out_status": log.out_status
-#                     }
-#                     for log in logs
-#                 ]
-#             }
-
-#     except Exception as e:
-#         print(f"[ERROR] Failed to fetch attendance log: {e}")
-#         return {
-#             "status": "error",
-#             "message": "Internal server error",
-#             "data": None
-#         }
 
 async def get_attendance_log(
     user_id: Annotated[str, Query(min_length=1, description="User ID must not be empty")]
 ):
-    """
-    Returns all attendance logs for the given user_id.
-    """
+   
     try:
         async with AsyncSessionLocal() as session:
             query = select(AttendanceLog).where(
