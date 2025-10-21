@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, time
 from sqlalchemy import select, and_
 from sqlalchemy.exc import SQLAlchemyError
-from database import AsyncSessionLocal, AttendanceLog, UserFace
+from database import AsyncSessionLocal, AttendanceLog
 
 async def auto_finalize_attendance():
     try:
