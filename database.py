@@ -69,7 +69,7 @@ print("[DEBUG] DATABASE_URL:", DATABASE_URL)
 
 ##### Database showing commands in cmd
 # psql -h ep-polished-poetry-a80gt1ci-pooler.eastus2.azure.neon.tech -p 5432 -U neondb_owner -d neondb
-# DB_PASSWORD=npg_fjZs4M8DpFXG
+
 
 
 
