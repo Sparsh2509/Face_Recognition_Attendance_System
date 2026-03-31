@@ -10,7 +10,7 @@ from fastapi import HTTPException
 from database import AsyncSessionLocal, UserFace
 from sqlalchemy.future import select
 from sqlalchemy.exc import SQLAlchemyError
-from shared_code import load_sface_model, get_face_embedding
+from core.shared_code import load_sface_model, get_face_embedding
 
 
 # Main registration function

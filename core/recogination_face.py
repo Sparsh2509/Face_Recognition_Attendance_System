@@ -8,7 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import and_
 
 from database import AsyncSessionLocal, UserFace, AttendanceLog
-from shared_code import (
+from core.shared_code import (
     decode_base64_image,
     load_sface_model,
     get_face_embedding,
