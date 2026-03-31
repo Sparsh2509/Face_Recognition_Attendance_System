@@ -5,7 +5,7 @@ from typing import Optional
 from typing import Annotated
 from core.register_face import register_face
 from core.recogination_face import recognize_face
-from database import AsyncSessionLocal, AttendanceLog
+from DB.database import AsyncSessionLocal, AttendanceLog
 from sqlalchemy.future import select
 from enum import Enum
 

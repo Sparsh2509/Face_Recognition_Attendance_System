@@ -7,7 +7,7 @@ from sqlalchemy.future import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import and_
 
-from database import AsyncSessionLocal, UserFace, AttendanceLog
+from DB.database import AsyncSessionLocal, UserFace, AttendanceLog
 from core.shared_code import (
     decode_base64_image,
     load_sface_model,

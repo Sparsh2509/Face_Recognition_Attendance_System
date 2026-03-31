@@ -1,5 +1,5 @@
 import asyncio
-from database import AsyncSessionLocal
+from DB.database import AsyncSessionLocal
 from sqlalchemy import text
 
 async def test_connection():

@@ -1,4 +1,4 @@
-from database import AsyncSessionLocal, UserFace, AttendanceLog
+from DB.database import AsyncSessionLocal, UserFace, AttendanceLog
 from sqlalchemy import delete
 import asyncio
 

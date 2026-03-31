@@ -7,7 +7,7 @@ import cv2
 import mediapipe as mp
 import json
 from fastapi import HTTPException
-from database import AsyncSessionLocal, UserFace
+from DB.database import AsyncSessionLocal, UserFace
 from sqlalchemy.future import select
 from sqlalchemy.exc import SQLAlchemyError
 from core.shared_code import load_sface_model, get_face_embedding
