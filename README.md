@@ -23,35 +23,26 @@ A Machine Learning–powered smart attendance system that uses **face encoding +
 
 ## 🏗️ System Architecture
 
-```mermaid
-flowchart LR
-    A["📱 Kotlin App\n(Frontend)"] -->|User Details| B["🌐 Django Backend\n(User Management)"]
-    B -->|Image URL| C["⚡ FastAPI ML Service\n(Recognition Engine)"]
-    A -->|Base64 Image| C
-    C -->|Read/Write| D[("🗄️ NeonDB\n(PostgreSQL)")]
-    B -->|Upload Image| E["☁️ Cloudinary\n(CDN)"]
-    C -->|Fetch Image| E
-    F["⏰ GitHub Action\n(Daily Cron)"] -->|Auto-Finalize| D
+The system consists of **3 key layers**:
 
-    style A fill:#6C63FF,stroke:#333,color:#fff
-    style B fill:#00C853,stroke:#333,color:#fff
-    style C fill:#FF6D00,stroke:#333,color:#fff
-    style D fill:#2196F3,stroke:#333,color:#fff
-    style E fill:#9C27B0,stroke:#333,color:#fff
-    style F fill:#F44336,stroke:#333,color:#fff
-```
+- **Frontend (Kotlin App)** — Captures live user images via camera, converts to Base64, and communicates with backend APIs for registration and recognition.
+- **Django Backend** — Manages user data, handles Cloudinary image uploads, and routes registration requests to the ML service.
+- **FastAPI ML Service** — Performs SFace face encoding + MediaPipe background encoding, compares against stored encodings, and marks attendance in real time.
+- **NeonDB (PostgreSQL)** — Stores user face encodings, background data, and attendance logs.
+- **Cloudinary (CDN)** — Stores user registration images.
+- **GitHub Actions** — Runs a daily cron job to auto-finalize incomplete attendance records.
 
 ### 📲 Flow 1: Registration (Django → ML)
-> Kotlin app sends user details to Django → Django stores the user and uploads image to **Cloudinary** → FastAPI fetches the image, performs **SFace face encoding** and **MediaPipe background encoding**, and saves the encodings to the database.
+Kotlin app sends user details to Django → Django stores the user and uploads image to **Cloudinary** → FastAPI fetches the image, performs **SFace face encoding** and **MediaPipe background encoding**, and saves the encodings to the database.
 
 ### 📷 Flow 2: Recognition (Kotlin App → ML)
-> Kotlin app captures live image → converts to **Base64** → sends to FastAPI → FastAPI decodes the image, encodes face + background, compares with stored encodings → if similarity is high, attendance is marked as **present** with timestamp.
+Kotlin app captures live image → converts to **Base64** → sends to FastAPI → FastAPI decodes the image, encodes face + background, compares with stored encodings → if similarity is high, attendance is marked as **present** with timestamp.
 
 ### 📊 Flow 3: Attendance Log (Database → Kotlin App)
-> Kotlin app requests attendance history for a given `user_id` → FastAPI fetches records from **NeonDB** → returns a list of attendance logs sorted by date with `in_time`, `out_time`, and status.
+Kotlin app requests attendance history for a given `user_id` → FastAPI fetches records from **NeonDB** → returns a list of attendance logs sorted by date with `in_time`, `out_time`, and status.
 
 ### 🔄 Flow 4: Auto-Finalize (GitHub Action)
-> Runs daily at **12:01 AM IST** → finds users who checked IN but forgot to check OUT → auto-sets `out_time` to 11:59 PM and marks status as `"present"`.
+Runs daily at **12:01 AM IST** → finds users who checked IN but forgot to check OUT → auto-sets `out_time` to 11:59 PM and marks status as `"present"`.
 
 ---
 
