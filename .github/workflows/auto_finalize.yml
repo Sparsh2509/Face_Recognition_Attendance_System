@@ -3,7 +3,7 @@ name: Daily Attendance Finalizer
 on:
   schedule:
     - cron: '31 18 * * *'  # Runs at 12:01 AM IST (UTC+5:30)
-  workflow_dispatch:        # Optional: run manually from GitHub Actions UI
+  workflow_dispatch:
 
 jobs:
   finalize:
@@ -24,6 +24,10 @@ jobs:
 
     - name: 🧠 Run Finalizer Script
       env:
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+        DB_NAME: ${{ secrets.DB_NAME }}
       run: |
-        python run_finalize.py
+        python scripts/run_finalize.py
