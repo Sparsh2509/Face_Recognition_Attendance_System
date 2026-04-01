@@ -1,11 +1,12 @@
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, timezone
 from sqlalchemy import select, and_
 from sqlalchemy.exc import SQLAlchemyError
 from DB.database import AsyncSessionLocal, AttendanceLog
 
 async def auto_finalize_attendance():
     try:
-        yesterday = datetime.now().date() - timedelta(days=1)
+        ist = timezone(timedelta(hours=5, minutes=30))
+        yesterday = datetime.now(ist).date() - timedelta(days=1)
         default_out_time = time(23, 59)
 
         async with AsyncSessionLocal() as session:
